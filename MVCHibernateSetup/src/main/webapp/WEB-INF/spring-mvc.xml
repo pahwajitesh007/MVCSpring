@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+       http://www.springframework.org/schema/context
+       http://www.springframework.org/schema/context/spring-context-3.2.xsd
+       http://www.springframework.org/schema/mvc
+       http://www.springframework.org/schema/mvc/spring-mvc-3.2.xsd
+       http://www.springframework.org/schema/tx
+       http://www.springframework.org/schema/tx/spring-tx-4.0.xsd">
+
+
+	<!-- this will scan all commponent inside the package and automatically 
+		register with web.xml. context:component-scan element in the spring configuration 
+		file would eliminate the need for declaring all the beans in the XML files. 
+		@Component @Repository @Service @Controller One advantage of this element 
+		is that it also resolve @Autowired and @Qualifier annotations. Therefore 
+		if you declare <context:component-scan>, is not necessary anymore declare 
+		<context:annotation-config> too. -->
+	<context:component-scan
+		base-package="com.jiteshp" />
+
+	<!-- mvc:annotation-driven is used for enabling the Spring MVC components 
+		with its default configurations. If you dont include mvc:annotation-driven 
+		also your MVC application would work if you have used the context:component-scan 
+		for creating the beans or defined the beans in your XML file. But, mvc:annotation-driven 
+		does some extra job on configuring the special beans that would not have 
+		been configured if you are not using this element in your XML file. This 
+		tag would registers the HandlerMapping and HandlerAdapter required to dispatch 
+		requests to your @Controllers. addtational support Support for formatting 
+		Number fields with @NumberFormat Support for formatting Date, Calendar, and 
+		Joda Time fields with @DateTimeFormat, if Joda Time is on the classpath -->
+	<mvc:annotation-driven />
+
+	<!-- this is for hibernate Transaction Manager implementation -->
+	<!-- <context:property-placeholder location="classpath:database.properties" 
+		/> -->
+	<context:property-placeholder
+		location="classpath:database.properties" />
+
+	<!-- <bean id="jdbcproperties" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"> 
+		<property name="location" value="classpath:database.properties"/> <property 
+		name="ignoreUnresolvablePlaceholders" value="true"/> </bean> -->
+	<tx:annotation-driven
+		transaction-manager="hibernateTransactionManager" />
+
+
+
+	<!-- Here Spring identify the View file returned by controller as per the 
+		defined property -->
+	<bean id="viewResolver"
+		class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<property name="prefix" value="/WEB-INF/pages/" />
+		<property name="suffix" value=".jsp" />
+	</bean>
+
+
+	<bean
+		class="org.springframework.jdbc.datasource.DriverManagerDataSource"
+		id="dataSource">
+		<property name="driverClassName" value="${database.driver}" />
+		<property name="url" value="${database.url}" />
+		<property name="username" value="${database.user}" />
+		<property name="password" value="${database.password}" />
+	</bean>
+
+	<bean
+		class="org.springframework.orm.hibernate5.LocalSessionFactoryBean"
+		id="sessionFactory">
+		<property name="datasource" ref="datasource" />
+		<property name="annotatedClasses">
+			<list>
+				<value>com.jiteshp.model.Employee</value>
+			</list>
+		</property>
+		<property name="hibernateProperties">
+			<props>
+				<prop key="hibernate.dialect">${hibernate.dialect}</prop>
+				<prop key="hibernate.show_sql">${hibernate.show_sql}</prop>
+				<prop key="hibernate.hbm2ddl.auto">${hibernate.hbm2ddl.auto}</prop>
+			</props>
+		</property>
+	</bean>
+	<bean
+		class="org.springframework.orm.hibernate5.HibernateTransactionManager"
+		id="hibernateTransactionManager">
+		<property name="sessionFactory" ref="sessionFactory"></property>
+	</bean>
+
+	<bean id="messageSource"
+		class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
+		<property name="basename" value="classpath:messages" />
+		<property name="defaultEncoding" value="UTF-8" />
+	</bean>
+
+	<bean id="localeResolver"
+		class="org.springframework.web.servlet.i18n.SessionLocaleResolver">
+		<property name="defaultLocale" value="en" />
+	</bean>
+	<mvc:interceptors>
+		<bean id="localeChangeInterceptor"
+			class="org.springframework.web.servlet.i18n.LocaleChangeInterceptor">
+			<property name="paramName" value="language"></property>
+		</bean>
+	</mvc:interceptors>
+</beans>
